@@ -185,7 +185,6 @@ EOF
 
 execute_with_prompt 'chmod +x init.config'
 execute_with_prompt './init.config'
-wait
 
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Building and starting Docker containers...${RESET}"
 docker compose up --build -d
