@@ -113,8 +113,14 @@ echo
 
 echo -e "${BOLD}${DARK_YELLOW}Create new Wallet:${RESET}"
 
-allorad keys add testwallet
-wait
+echo -e "${CYAN}Backup your wallet or Create new testwallet (Y/N):${RESET}"
+read -p "" backupwallet
+echo
+
+if [[ "$backupwallet" =~ ^[Yy]$ ]]; then
+    allorad keys add testwallet --recover
+    wait
+fi
 
 echo
 echo -e "${BOLD}${DARK_YELLOW}Copy mnemonic phrase & paste here:${RESET}"
@@ -179,18 +185,6 @@ EOF
 
 execute_with_prompt 'chmod +x init.config'
 execute_with_prompt './init.config'
-
-echo
-
-echo -e "${BOLD}${DARK_YELLOW}Faucet fund address worker:${RESET}"
-curl -L https://faucet.testnet-1.testnet.allora.network/send/allora-testnet-1/$(allorad keys  show testwallet -a --keyring-backend test)
-sleep 5
-curl -L https://faucet.testnet-1.testnet.allora.network/send/allora-testnet-1/$(allorad keys  show testwallet -a --keyring-backend test)
-sleep 10
-curl -L https://faucet.testnet-1.testnet.allora.network/send/allora-testnet-1/$(allorad keys  show testwallet -a --keyring-backend test)
-sleep 7
-
-echo
 wait
 
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Building and starting Docker containers...${RESET}"
