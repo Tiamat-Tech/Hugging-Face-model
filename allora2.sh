@@ -148,7 +148,7 @@ if [ -f config.json ]; then
     echo "Removed existing config.json file."
 fi
 if [[ "$model" =~ ^[Yy]$ ]]; then
-    cat <<EOF > config.json
+cat <<EOF > config.json
     {
         "wallet": {
             "addressKeyName": "testwallet",
@@ -191,9 +191,9 @@ if [[ "$model" =~ ^[Yy]$ ]]; then
             }
         ]
     }
-    EOF
-fi
+EOF
 
+else
 cat <<EOF > config.json
     {
         "wallet": {
@@ -270,6 +270,7 @@ cat <<EOF > config.json
         ]
     }
 EOF
+fi
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW} If docker not run when init done, try this ...${RESET}"
 execute_with_prompt 'chmod +x init.config'
 
