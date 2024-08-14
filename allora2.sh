@@ -163,7 +163,7 @@ cat <<EOF > config.json
                 "InferenceEndpoint": "http://inference:8000/inference/{Token}",
                 "Token": "BTC"
             }
-        }
+        },
         {
             "topicId": 6,
             "inferenceEntrypointName": "api-worker-reputer",
