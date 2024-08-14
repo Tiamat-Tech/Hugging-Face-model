@@ -182,6 +182,9 @@ cat <<EOF > config.json
     ]
 }
 EOF
+echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW} If docker not run when init done, try this ...${RESET}"
+echo -e "RUN: docker compose up --build -d"
+echo -e "VIEW LOGS: docker compose logs -f"
 
 execute_with_prompt 'chmod +x init.config'
 execute_with_prompt './init.config'
