@@ -276,6 +276,8 @@ execute_with_prompt 'chmod +x init.config'
 
 echo
 echo -e "==============RUN: cd basic-coin-prediction-node"
+echo -e "==============RUN: cd allora-offchain-node"
+
 echo -e "==============RUN: ./init.config"
 echo -e "==============RUN: docker compose up --build -d"
 echo -e "==============RUN: docker compose up --build -d"
