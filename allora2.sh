@@ -159,7 +159,7 @@ cat <<EOF > config.json
             "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
             "maxRetries": 1,
             "delay": 1,
-            "submitTx": true
+            "submitTx": false
         },
         "worker": [
             {
