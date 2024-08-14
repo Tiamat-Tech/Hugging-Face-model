@@ -106,9 +106,18 @@ echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Continuce Installing worker node...${R
 rm -rf basic-coin-prediction-node
 git clone https://github.com/allora-network/basic-coin-prediction-node
 cd basic-coin-prediction-node
-wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/basic-coin-prediction-node/app.py
-wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/main.py -O /root/basic-coin-prediction-node/main.py
-wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/basic-coin-prediction-node/requirements.txt
+
+echo -e "${CYAN}Choose model: 24H HUGGING (Y)/ 10M (N) :${RESET}"
+read -p "" model
+echo
+
+if [[ "$model" =~ ^[Yy]$ ]]; then
+    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/basic-coin-prediction-node/app.py
+    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/main.py -O /root/basic-coin-prediction-node/main.py
+    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/basic-coin-prediction-node/requirements.txt
+    wait
+fi
+
 echo
 
 echo -e "${BOLD}${DARK_YELLOW}Create new Wallet:${RESET}"
@@ -137,51 +146,52 @@ if [ -f config.json ]; then
     rm config.json
     echo "Removed existing config.json file."
 fi
-
-cat <<EOF > config.json
-{
-    "wallet": {
-        "addressKeyName": "testwallet",
-        "addressRestoreMnemonic": "${HEX}",
-        "alloraHomeDir": "",
-        "gas": "1000000",
-        "gasAdjustment": 1.0,
-        "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
-        "maxRetries": 1,
-        "delay": 1,
-        "submitTx": false
-    },
-    "worker": [
-        {
-            "topicId": 2,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-                "Token": "ETH"
-            }
+if [[ "$model" =~ ^[Yy]$ ]]; then
+    cat <<EOF > config.json
+    {
+        "wallet": {
+            "addressKeyName": "testwallet",
+            "addressRestoreMnemonic": "${HEX}",
+            "alloraHomeDir": "",
+            "gas": "1000000",
+            "gasAdjustment": 1.0,
+            "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
+            "maxRetries": 1,
+            "delay": 1,
+            "submitTx": false
         },
-        {
-            "topicId": 4,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-                "Token": "BTC"
+        "worker": [
+            {
+                "topicId": 2,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ETH"
+                }
+            },
+            {
+                "topicId": 4,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BTC"
+                }
+            },
+            {
+                "topicId": 6,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "SOL"
+                }
             }
-        },
-        {
-            "topicId": 6,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-                "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-                "Token": "SOL"
-            }
-        }
-    ]
-}
-EOF
+        ]
+    }
+    EOF
+fi
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW} If docker not run when init done, try this ...${RESET}"
 execute_with_prompt 'chmod +x init.config'
 
