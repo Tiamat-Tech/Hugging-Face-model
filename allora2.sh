@@ -192,8 +192,8 @@ cat <<EOF > config.json
         ]
     }
 EOF
-
 else
+
 cat <<EOF > config.json
     {
         "wallet": {
