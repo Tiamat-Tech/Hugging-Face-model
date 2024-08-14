@@ -111,9 +111,9 @@ if [[ "$model" =~ ^[Yy]$ ]]; then
     git clone https://github.com/allora-network/basic-coin-prediction-node
     cd basic-coin-prediction-node
     
-    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/basic-coin-prediction-node/app.py
-    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/main.py -O /root/basic-coin-prediction-node/main.py
-    wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/basic-coin-prediction-node/requirements.txt
+    #wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/basic-coin-prediction-node/app.py
+    #wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/main.py -O /root/basic-coin-prediction-node/main.py
+    #wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/basic-coin-prediction-node/requirements.txt
     wait
 else
     echo -e "${CYAN}Installing: 10H Offchain-node :${RESET}"
@@ -163,6 +163,15 @@ cat <<EOF > config.json
         },
         "worker": [
             {
+                "topicId": 1,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ETH"
+                }
+            },
+            {
                 "topicId": 2,
                 "inferenceEntrypointName": "api-worker-reputer",
                 "loopSeconds": 5,
@@ -172,21 +181,12 @@ cat <<EOF > config.json
                 }
             },
             {
-                "topicId": 4,
+                "topicId": 7,
                 "inferenceEntrypointName": "api-worker-reputer",
                 "loopSeconds": 5,
                 "parameters": {
                     "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-                    "Token": "BTC"
-                }
-            },
-            {
-                "topicId": 6,
-                "inferenceEntrypointName": "api-worker-reputer",
-                "loopSeconds": 5,
-                "parameters": {
-                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-                    "Token": "SOL"
+                    "Token": "ETH"
                 }
             }
         ]
