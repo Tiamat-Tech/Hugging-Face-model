@@ -99,10 +99,6 @@ if [[ "$installdep" =~ ^[Yy]$ ]]; then
 fi
 
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Continuce Installing worker node...${RESET}"
-rm -rf basic-coin-prediction-node
-git clone https://github.com/allora-network/basic-coin-prediction-node
-cd basic-coin-prediction-node
-
 echo -e "${CYAN}Choose model: 24H HUGGING (Y)/ 10M: Offchain-node (N) :${RESET}"
 read -p "" model
 echo
