@@ -118,7 +118,7 @@ wait
 
 echo
 echo -e "${BOLD}${DARK_YELLOW}Copy mnemonic phrase & paste here:${RESET}"
-allorad keys add testwallet --recover --keyring-backend test --unarmored-hex --unsafe
+allorad keys add testwallet --recover --keyring-backend test
 echo
 wait
 
