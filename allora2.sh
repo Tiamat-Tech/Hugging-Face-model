@@ -16,17 +16,6 @@ execute_with_prompt() {
     fi
 }
 
-echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Requirement for running allora-worker-node${RESET}"
-echo
-echo -e "${BOLD}${DARK_YELLOW}Operating System : Ubuntu 22.04${RESET}"
-echo -e "${BOLD}${DARK_YELLOW}CPU : Min of 1/2 core.${RESET}"
-echo -e "${BOLD}${DARK_YELLOW}RAM : 2 to 4 GB.${RESET}"
-echo -e "${BOLD}${DARK_YELLOW}Storage : SSD or NVMe with at least 5GB of space.${RESET}"
-echo
-
-echo -e "${CYAN}Do you meet all of these requirements? (Y/N):${RESET}"
-read -p "" response
-echo
 
 if [[ ! "$response" =~ ^[Yy]$ ]]; then
     echo -e "${BOLD}${DARK_YELLOW}Error: You do not meet the required specifications. Exiting...${RESET}"
@@ -77,25 +66,6 @@ if [[ "$installdep" =~ ^[Yy]$ ]]; then
     execute_with_prompt 'docker-compose --version'
     echo
     
-    echo -e "${BOLD}${DARK_YELLOW}Installing Go...${RESET}"
-    execute_with_prompt 'cd $HOME'
-    echo
-    execute_with_prompt 'ver="1.21.3" && wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"'
-    echo
-    execute_with_prompt 'sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"'
-    echo
-    execute_with_prompt 'rm "go$ver.linux-amd64.tar.gz"'
-    echo
-    execute_with_prompt 'echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> $HOME/.bash_profile'
-    echo
-    execute_with_prompt 'source $HOME/.bash_profile'
-    echo
-    echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> $HOME/.bash_profile
-    source .bash_profile
-    
-    echo -e "${BOLD}${DARK_YELLOW}Checking go version...${RESET}"
-    execute_with_prompt 'go version'
-    echo
 fi
 
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Continuce Installing worker node...${RESET}"
@@ -123,21 +93,6 @@ else
 fi
 echo
 
-
-echo -e "${BOLD}${DARK_YELLOW}Create new Wallet:${RESET}"
-
-echo -e "${CYAN}Backup your wallet or Create new testwallet (Y/N):${RESET}"
-read -p "" backupwallet
-echo
-
-if [[ "$backupwallet" =~ ^[Yy]$ ]]; then
-    allorad keys add testwallet --recover
-    wait
-fi
-echo
-
-wait
-
 echo -e "${BOLD}${UNDERLINE}${DARK_YELLOW}Continuce config worker node...${RESET}"
 
 printf 'Copy mnemonic phrase testwallet & paste here: '
@@ -154,7 +109,7 @@ cat <<EOF > config.json
             "addressKeyName": "testwallet",
             "addressRestoreMnemonic": "${HEX}",
             "alloraHomeDir": "",
-            "gas": "2000000",
+            "gas": "3000000",
             "gasAdjustment": 1.0,
             "nodeRpc": "https://sentries-rpc.testnet-1.testnet.allora.network/",
             "maxRetries": 1,
@@ -165,7 +120,7 @@ cat <<EOF > config.json
             {
                 "topicId": 1,
                 "inferenceEntrypointName": "api-worker-reputer",
-                "loopSeconds": 5,
+                "loopSeconds": 1,
                 "parameters": {
                     "InferenceEndpoint": "http://inference:8000/inference/{Token}",
                     "Token": "ETH"
@@ -174,21 +129,76 @@ cat <<EOF > config.json
             {
                 "topicId": 2,
                 "inferenceEntrypointName": "api-worker-reputer",
-                "loopSeconds": 5,
+                "loopSeconds": 3,
                 "parameters": {
                     "InferenceEndpoint": "http://inference:8000/inference/{Token}",
                     "Token": "ETH"
                 }
             },
             {
-                "topicId": 7,
+                "topicId": 3,
                 "inferenceEntrypointName": "api-worker-reputer",
                 "loopSeconds": 5,
                 "parameters": {
                     "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BTC"
+                }
+            },
+            {
+                "topicId": 4,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 2,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BTC"
+                }
+            },
+            {
+                "topicId": 5,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 4,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "SOL"
+                }
+            },
+            {
+                "topicId": 6,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "SOL"
+                }
+            },
+            {
+                "topicId": 7,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 2,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
                     "Token": "ETH"
                 }
+            },
+            {
+                "topicId": 8,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 3,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BNB"
+                }
+            },
+            {
+                "topicId": 9,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ARB"
+                }
             }
+            
         ]
     }
 EOF
@@ -207,40 +217,95 @@ cat <<EOF > config.json
             "delay": 1,
             "submitTx": true
         },
-        "worker": [
-          {
-            "topicId": 1,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-              "InferenceEndpoint": "http://source:8000/inference/{Token}",
-              "Token": "ETH"
+         "worker": [
+            {
+                "topicId": 1,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 1,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ETH"
+                }
+            },
+            {
+                "topicId": 2,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 3,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ETH"
+                }
+            },
+            {
+                "topicId": 3,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BTC"
+                }
+            },
+            {
+                "topicId": 4,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 2,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BTC"
+                }
+            },
+            {
+                "topicId": 5,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 4,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "SOL"
+                }
+            },
+            {
+                "topicId": 6,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "SOL"
+                }
+            },
+            {
+                "topicId": 7,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 2,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ETH"
+                }
+            },
+            {
+                "topicId": 8,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 3,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "BNB"
+                }
+            },
+            {
+                "topicId": 9,
+                "inferenceEntrypointName": "api-worker-reputer",
+                "loopSeconds": 5,
+                "parameters": {
+                    "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+                    "Token": "ARB"
+                }
             }
-          },
-          {
-            "topicId": 3,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-              "InferenceEndpoint": "http://source:8000/inference/{Token}",
-              "Token": "BTC"
-            }
-          },
-          {
-            "topicId": 5,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-              "InferenceEndpoint": "http://source:8000/inference/{Token}",
-              "Token": "SOL"
-            }
-          }
+            
         ],
         "reputer": [
           {
             "topicId": 1,
             "reputerEntrypointName": "api-worker-reputer",
-            "loopSeconds": 30,
+            "loopSeconds": 20,
             "minStake": 100000,
             "parameters": {
               "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
@@ -250,7 +315,17 @@ cat <<EOF > config.json
           {
             "topicId": 3,
             "reputerEntrypointName": "api-worker-reputer",
-            "loopSeconds": 30,
+            "loopSeconds": 22,
+            "minStake": 100000,
+            "parameters": {
+              "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
+              "Token": "bitcoin"
+            }
+          },
+          {
+            "topicId": 4,
+            "reputerEntrypointName": "api-worker-reputer",
+            "loopSeconds": 24,
             "minStake": 100000,
             "parameters": {
               "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
@@ -260,11 +335,51 @@ cat <<EOF > config.json
           {
             "topicId": 5,
             "reputerEntrypointName": "api-worker-reputer",
-            "loopSeconds": 30,
+            "loopSeconds": 26,
             "minStake": 100000,
             "parameters": {
               "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
               "Token": "solana"
+            }
+          },
+          {
+            "topicId": 6,
+            "reputerEntrypointName": "api-worker-reputer",
+            "loopSeconds": 28,
+            "minStake": 100000,
+            "parameters": {
+              "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
+              "Token": "solana"
+            }
+          },
+          {
+            "topicId": 7,
+            "reputerEntrypointName": "api-worker-reputer",
+            "loopSeconds": 30,
+            "minStake": 100000,
+            "parameters": {
+              "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
+              "Token": "ethereum"
+            }
+          },
+          {
+            "topicId": 8,
+            "reputerEntrypointName": "api-worker-reputer",
+            "loopSeconds": 32,
+            "minStake": 100000,
+            "parameters": {
+              "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
+              "Token": "binancecoin"
+            }
+          },
+          {
+            "topicId": 9,
+            "reputerEntrypointName": "api-worker-reputer",
+            "loopSeconds": 35,
+            "minStake": 100000,
+            "parameters": {
+              "SourceOfTruthEndpoint": "http://source:8000/truth/{Token}/{BlockHeight}",
+              "Token": "arbitrum"
             }
           }
         ]
