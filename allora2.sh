@@ -16,13 +16,6 @@ execute_with_prompt() {
     fi
 }
 
-
-if [[ ! "$response" =~ ^[Yy]$ ]]; then
-    echo -e "${BOLD}${DARK_YELLOW}Error: You do not meet the required specifications. Exiting...${RESET}"
-    echo
-    exit 1
-fi
-
 echo -e "${CYAN}Install dependencies allora, If already install = N? (Y/N):${RESET}"
 read -p "" installdep
 echo
