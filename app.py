@@ -5,13 +5,8 @@ import pandas as pd
 import torch
 from chronos import ChronosPipeline
 
-# Tạo Flask app
 app = Flask(__name__)
-
-# Định nghĩa mô hình Hugging Face sẽ sử dụng
 model_name = "amazon/chronos-t5-tiny"
-
-# Tải mô hình khi ứng dụng khởi động để tránh lỗi pipeline
 try:
     pipeline = ChronosPipeline.from_pretrained(
         model_name,
@@ -22,65 +17,62 @@ except Exception as e:
     pipeline = None
     print(f"Failed to load pipeline: {e}")
 
-def get_coingecko_url(token):
-    base_url = "https://api.coingecko.com/api/v3/coins/"
-    token_map = {
-        'ETH': 'ethereum',
-        'SOL': 'solana',
-        'BTC': 'bitcoin',
-        'BNB': 'binancecoin',
-        'ARB': 'arbitrum'
-    }
-    
-    token = token.upper()
-    if token in token_map:
-        url = f"{base_url}{token_map[token]}/market_chart?vs_currency=usd&days=1&interval=minute"
-        return url
-    else:
-        raise ValueError("Unsupported token")
+def get_binance_url(symbol="ETHUSDT", interval="1m", limit=1000):
+    return f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
 
 @app.route("/inference/<string:token>")
 def get_inference(token):
-    """Tạo dự đoán cho token đã cho."""
     if pipeline is None:
         return Response(json.dumps({"error": "Pipeline is not available"}), status=500, mimetype='application/json')
 
-    try:
-        url = get_coingecko_url(token)
-    except ValueError as e:
-        return Response(json.dumps({"error": str(e)}), status=400, mimetype='application/json')
-
-    headers = {
-        "accept": "application/json",
-        "x-cg-demo-api-key": "CG-"  # Thay bằng API key của bạn
+    symbol_map = {
+        'ETH': 'ETHUSDT',
+        'BTC': 'BTCUSDT',
+        'BNB': 'BNBUSDT',
+        'SOL': 'SOLUSDT',
+        'ARB': 'ARBUSDT'
     }
 
-    response = requests.get(url, headers=headers)
+    token = token.upper()
+    if token in symbol_map:
+        symbol = symbol_map[token]
+    else:
+        return Response(json.dumps({"error": "Unsupported token"}), status=400, mimetype='application/json')
+
+    url = get_binance_url(symbol=symbol)
+
+    response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        df = pd.DataFrame(data["prices"])
+        df = pd.DataFrame(data, columns=[
+            "open_time", "open", "high", "low", "close", "volume",
+            "close_time", "quote_asset_volume", "number_of_trades",
+            "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
+        ])
+        df["close_time"] = pd.to_datetime(df["close_time"], unit='ms')
+        df = df[["close_time", "close"]]
         df.columns = ["date", "price"]
-        df["date"] = pd.to_datetime(df["date"], unit='ms')
-        df = df.tail(20)  # Lấy 20 phút cuối cùng
+        df["price"] = df["price"].astype(float)
+        
+        if symbol in ['BTCUSDT', 'SOLUSDT']:
+            df = df.tail(10)  # 10mins BTCUSDT và SOLUSDT
+        else:
+            df = df.tail(20)  # 20mins
     else:
-        return Response(json.dumps({"Failed to retrieve data from the API": str(response.text)}), 
+        return Response(json.dumps({"Failed to retrieve data from Binance API": str(response.text)}), 
                         status=response.status_code, 
                         mimetype='application/json')
 
     context = torch.tensor(df["price"].values)
-    prediction_length = 20  # Dự đoán cho 20 phút
+    prediction_length = len(df)  # Sử dụng số lượng phút tương ứng với dữ liệu đã chọn
 
     try:
         forecast = pipeline.predict(context, prediction_length)
-        forecast_mean = forecast[0].mean(dim=1).tolist()  # Tính giá trị trung bình
-        return Response(json.dumps(forecast_mean), status=200, mimetype='application/json')
+        forecast_mean = forecast[0].mean().item()  # Tính giá trị trung bình
+        return Response(str(forecast_mean), status=200, mimetype='text/plain')
     except Exception as e:
-        return Response(json.dumps({"error": str(e)}), status=500, mimetype='application/json')
+        return Response(str(e), status=500, mimetype='text/plain')
 
 # Chạy Flask app
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000, debug=True)
-
-
-
-
