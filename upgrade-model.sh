@@ -22,7 +22,8 @@ if [[ "$installdep" =~ ^[Yy]$ ]]; then
     wait
 	
     echo -e "${CYAN}Rebuild and run a model :${RESET}"
-	
+
+    cd /root/allora-huggingface-walkthrough/
     echo
     docker compose down
     echo
