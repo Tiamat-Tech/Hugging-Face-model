@@ -18,7 +18,16 @@ CG_Keys = [
     "CG-B48aWQvXUjgQ97FR9tkij526",
     "CG-SXDL5b7UnwWKAnAi2BjYaeii",
     "CG-d6GjgszPN2oLptEc6Yct3mNS",
-    "CG-dYLNoobF2yTLvJd5LeTM9sAD"
+    "CG-dYLNoobF2yTLvJd5LeTM9sAD",
+    "CG-AzH5ihnSLJkyNAime7BFm72Q",
+    "CG-gS72E3HbWK7TZpYBP1MqAA7R",
+    "CG-FmVtx7zaAoL6Kum1UjEDeRZV",
+    "CG-P6xBDENfHFgFJyWyUzDjEAq8",
+    "CG-S1izHbv8o2vEUPoiMtcPVjQG",
+    "CG-zs8hNgi2roheqnSkMxctmXCs",
+    "CG-Rop8DVkMZYhGDSwDPEoXJY2F",
+    "CG-gC1aHMvq5euD63n11vquT8gs",
+    "CG-KcMDTvDDQPCwopCwPKvPNpBu"
 ]
 
 UP_Keys = [
