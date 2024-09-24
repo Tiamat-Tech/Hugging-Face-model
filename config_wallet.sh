@@ -32,33 +32,6 @@ while IFS='|' read -r address mnemonic; do\
     },
     "worker": [
         {
-            "topicId": 1,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 15,
-            "parameters": {
-            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-            "Token": "ETH"
-            }
-        },
-        {
-            "topicId": 3,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 15,
-            "parameters": {
-            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-            "Token": "BTC"
-            }
-        },
-        {
-            "topicId": 5,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 15,
-            "parameters": {
-            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
-            "Token": "SOL"
-            }
-        },
-        {
             "topicId": 7,
             "inferenceEntrypointName": "api-worker-reputer",
             "loopSeconds": 5,
@@ -83,15 +56,6 @@ while IFS='|' read -r address mnemonic; do\
             "parameters": {
                 "InferenceEndpoint": "http://inference:8000/inference/{Token}",
                 "Token": "ARB"
-            }
-        },
-        {
-            "topicId": 11,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-                "InferenceEndpoint": "http://inference:8000/inference/topic11/{Team}",
-                "Team": "R"
             }
         }
     ]
