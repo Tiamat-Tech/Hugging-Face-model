@@ -1,78 +1,158 @@
 from flask import Flask, Response
 import requests
 import json
-import pandas as pd
-import torch
-from chronos import ChronosPipeline
+import random
 
+# create our Flask app
 app = Flask(__name__)
-model_name = "amazon/chronos-t5-tiny"
-try:
-    pipeline = ChronosPipeline.from_pretrained(
-        model_name,
-        device_map="auto",
-        torch_dtype=torch.bfloat16,
-    )
-except Exception as e:
-    pipeline = None
-    print(f"Failed to load pipeline: {e}")
 
-def get_binance_url(symbol="ETHUSDT", interval="1m", limit=1000):
-    return f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+CG_Keys = [
+    "CG-SHVRcN149eTRRWye8m9WcRMp",
+    "CG-hfJj5cwMHCojc53CZbqkp9Cm",
+    "CG-exoXxbm5nH7RupWVVEgXyAEb",
+    "CG-xDakxFq8GTNnvrBoECi7XEEM",
+    "CG-MWwrr4qjo1mrnbnTQXiuK5Jt",
+    "CG-NQCDyrDtFU8fZ183a3VD4mWR",
+    "CG-tYzY9xxiRpiV2GrFxYmXH95q",
+    "CG-7rA1whQArU4SE9Ui2DPLD5fJ",
+    "CG-B48aWQvXUjgQ97FR9tkij526",
+    "CG-SXDL5b7UnwWKAnAi2BjYaeii",
+    "CG-d6GjgszPN2oLptEc6Yct3mNS",
+    "CG-dYLNoobF2yTLvJd5LeTM9sAD"
+]
 
-@app.route("/inference/<string:token>")
-def get_inference(token):
-    if pipeline is None:
-        return Response(json.dumps({"error": "Pipeline is not available"}), status=500, mimetype='application/json')
+UP_Keys = [
+    "UP-920fa918502c41d0bd96b8e8",
+    "UP-d6f2d4ec7236440f88476bf9",
+    "UP-848833090ed742b1b4155ee2",
+    "UP-d83e248df81943ef9087240c",
+    "UP-253f4615b5f247fd90b605ae",
+    "UP-709bb6647c7e46f2aa8cf0a5",
+    "UP-c5cb5cd2cddc4449ac56ef25"
+]
 
-    symbol_map = {
-        'ETH': 'ETHUSDT',
-        'BTC': 'BTCUSDT',
-        'BNB': 'BNBUSDT',
-        'SOL': 'SOLUSDT',
-        'ARB': 'ARBUSDT'
+def get_memecoin_token(blockheight):
+    UP_Key = random.choice(UP_Keys)
+    
+    upshot_url = f"https://api.upshot.xyz/v2/allora/tokens-oracle/token/{blockheight}"
+    headers = {
+        'accept': 'application/json',
+        'x-api-key': UP_Key
     }
-
-    token = token.upper()
-    if token in symbol_map:
-        symbol = symbol_map[token]
-    else:
-        return Response(json.dumps({"error": "Unsupported token"}), status=400, mimetype='application/json')
-
-    url = get_binance_url(symbol=symbol)
-
-    response = requests.get(url)
+    response = requests.get(upshot_url, headers=headers)
+        
     if response.status_code == 200:
         data = response.json()
-        df = pd.DataFrame(data, columns=[
-            "open_time", "open", "high", "low", "close", "volume",
-            "close_time", "quote_asset_volume", "number_of_trades",
-            "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
-        ])
-        df["close_time"] = pd.to_datetime(df["close_time"], unit='ms')
-        df = df[["close_time", "close"]]
-        df.columns = ["date", "price"]
-        df["price"] = df["price"].astype(float)
-        
-        if symbol in ['BTCUSDT', 'SOLUSDT']:
-            df = df.tail(10)  # 10mins BTCUSDT và SOLUSDT
-        else:
-            df = df.tail(20)  # 20mins
+        name_token = str(data["data"]["token_id"]) #return "boshi"
+        return name_token
     else:
-        return Response(json.dumps({"Failed to retrieve data from Binance API": str(response.text)}), 
-                        status=response.status_code, 
-                        mimetype='application/json')
+        raise ValueError("Unsupported token") 
 
-    context = torch.tensor(df["price"].values)
-    prediction_length = len(df)  # Sử dụng số lượng phút tương ứng với dữ liệu đã chọn
+def get_meme_price(token):
+    CG_Key = random.choice(CG_Keys)
+    base_url = "https://api.coingecko.com/api/v3/simple/price?ids="
+    token_map = {
+        'ETH': 'ethereum',
+        'SOL': 'solana',
+        'BTC': 'bitcoin',
+        'BNB': 'binancecoin',
+        'ARB': 'arbitrum'
+    }
+    token = token.upper()
+    print(CG_Key)
+    if token in token_map:
+        url = f"{base_url}{token_map[token]}&vs_currencies=usd"
+        headers = {
+            "accept": "application/json",
+            "x-cg-demo-api-key": CG_Key
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            price = data[token_map[token]]["usd"]
+            print(price)
+            return price
+    else:
+        raise ValueError("Unsupported token") 
+    return
 
-    try:
-        forecast = pipeline.predict(context, prediction_length)
-        forecast_mean = forecast[0].mean().item()  # Tính giá trị trung bình
-        return Response(str(forecast_mean), status=200, mimetype='text/plain')
-    except Exception as e:
-        return Response(str(e), status=500, mimetype='text/plain')
+def get_simple_price(token):
+    CG_Key = random.choice(CG_Keys)
+    base_url = "https://api.coingecko.com/api/v3/simple/price?ids="
+    token_map = {
+        'ETH': 'ethereum',
+        'SOL': 'solana',
+        'BTC': 'bitcoin',
+        'BNB': 'binancecoin',
+        'ARB': 'arbitrum'
+    }
+    token = token.upper()
+    headers = {
+        "accept": "application/json",
+        "x-cg-demo-api-key": CG_Key
+    }
+    if token in token_map:
+        url = f"{base_url}{token_map[token]}&vs_currencies=usd"
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            price = data[token_map[token]]["usd"]
+            return price
+        
+    elif token not in token_map:
+        token = token.lower()
+        url = f"{base_url}{token}&vs_currencies=usd"
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return data[token]["usd"]
+        
+    else:
+        raise ValueError("Unsupported token") 
 
-# Chạy Flask app
+@app.route("/collect-price")
+def collect_price():
+    tokens = [ 'ETH', 'SOL', 'BTC', 'BNB', 'ARB']
+    for token in tokens:
+        price = get_simple_price(token)
+        with open(token + ".txt", "w") as file:
+            file.write(str(price))
+        
+    return Response("Success", status=200, mimetype='application/json')
+
+# define our endpoint
+@app.route("/inference/<string:tokenorblockheightorparty>")
+def get_inference(tokenorblockheightorparty):
+    if tokenorblockheightorparty.isnumeric():
+        namecoin = get_memecoin_token(tokenorblockheightorparty)
+        price = get_simple_price(namecoin)
+        price1 = price + price*0.8/100
+        price2 = price - price*0.8/100
+        predict_result = str(round(random.uniform(price1, price2), 6))
+    elif len(tokenorblockheightorparty) == 3 and tokenorblockheightorparty.isalpha(): 
+        try:
+            with open(tokenorblockheightorparty + ".txt", "r") as file:
+                content = file.read().strip()
+            price = float(content)
+            price1 = price + price*0.8/100
+            price2 = price - price*0.8/100
+            predict_result = str(round(random.uniform(price1, price2), 2))
+        except Exception as e:
+            return Response(json.dumps({"pipeline error": str(e)}), status=500, mimetype='application/json')
+        
+    else:
+        predict_result = str(round(random.uniform(44, 51), 2))
+    
+    return predict_result
+
+# define predict party
+@app.route("/inference/topic11/<string:team>")
+def guestTeam(team):
+    lowest = 44
+    highest = 51
+    random_float = str(random.uniform(lowest, highest))
+    return Response(random_float, status=200)
+
+# run our Flask app
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000, debug=True)
