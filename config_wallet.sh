@@ -76,9 +76,12 @@ endpoints=$(echo "$json_data" | jq -r '
   | "http://" + .
 ')
 
-# Add more 10 row "https://allora-testnet-rpc.itrocket.net"
-fixed_endpoints=$(for i in {1..15}; do echo "https://allora-testnet-rpc.itrocket.net"; done)
+random_endpoints=$(echo "$endpoints" | shuf -n 50)
 
+fixed_endpoints=$(for i in {1..5}; do echo "https://allora-testnet-rpc.itrocket.net"; done)
+
+# Ghi cả danh sách endpoint từ JSON và 10 dòng cố định vào file
 echo "$endpoints" > rpc_list.txt
 echo "$fixed_endpoints" >> rpc_list.txt
+echo "$random_endpoints" >> rpc_list.txt
 
