@@ -118,6 +118,8 @@ endpoints=$(echo "$json_data" | jq -r '
   | reverse 
   | .[:50] 
   | .[].key
+  | "http://" + .
 ')
 
 echo "$endpoints" > rpc_list.txt
+
