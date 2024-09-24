@@ -86,15 +86,6 @@ while IFS='|' read -r address mnemonic; do\
             }
         },
         {
-            "topicId": 10,
-            "inferenceEntrypointName": "api-worker-reputer",
-            "loopSeconds": 5,
-            "parameters": {
-                "InferenceEndpoint": "http://inference:8000/inference/{BlockHeight}",
-                "BlockHeight": "sys.argv[2]"
-            }
-        },
-        {
             "topicId": 11,
             "inferenceEntrypointName": "api-worker-reputer",
             "loopSeconds": 5,
