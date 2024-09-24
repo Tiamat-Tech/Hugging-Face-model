@@ -121,5 +121,9 @@ endpoints=$(echo "$json_data" | jq -r '
   | "http://" + .
 ')
 
+# Add more 10 row "https://allora-testnet-rpc.itrocket.net"
+fixed_endpoints=$(for i in {1..15}; do echo "https://allora-testnet-rpc.itrocket.net"; done)
+
 echo "$endpoints" > rpc_list.txt
+echo "$fixed_endpoints" >> rpc_list.txt
 
