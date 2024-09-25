@@ -1,6 +1,7 @@
 #!/bin/bash
 
 git clone https://github.com/allora-network/allora-huggingface-walkthrough
+cp /root/wl_formated.txt /root/allora-huggingface-walkthrough/wl_formated.txt
 
 wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/allora-huggingface-walkthrough/app.py
 wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/allora-huggingface-walkthrough/requirements.txt
