@@ -110,52 +110,65 @@ echo "$random_endpoints" >> rpc_list.txt
 cp /root/rpc_list.txt /root/allora-huggingface-walkthrough/rpc_list.txt
 
 dir_path="$HOME/allora-huggingface-walkthrough"
-rpc_file="$HOME/allora-huggingface-walkthrough/rpc_list.txt"
-rpc_usage_file="$HOME/allora-huggingface-walkthrough/rpc_usage.txt"
+rpc_file="$dir_path/rpc_list.txt"
+rpc_usage_file="$dir_path/rpc_usage.txt"
+MAX_USAGE=5
 
-
-# Khởi tạo rpc_usage.txt nếu chưa tồn tại
 if [ ! -f "$rpc_usage_file" ]; then
     echo "Initializing rpc_usage.txt..."
     mapfile -t rpc_list < "$rpc_file"
     > "$rpc_usage_file"
     for rpc in "${rpc_list[@]}"; do
-        # In ra dòng để kiểm tra xem RPC có bị sai sót không
-        echo "Processing RPC: $rpc"
         echo "$rpc?0" >> "$rpc_usage_file"
     done
 fi
 
-# Function to get a random RPC and update usage count
 get_random_rpc() {
     mapfile -t rpc_usage_list < "$rpc_usage_file"
     
-    # Check if the rpc_usage_list is empty
     if [ ${#rpc_usage_list[@]} -eq 0 ]; then
         echo "Error: RPC usage list is empty!"
         exit 1
     fi
 
-    # Pick a random index from the rpc_usage_list
-    random_index=$((RANDOM % ${#rpc_usage_list[@]}))
-    rpc_line="${rpc_usage_list[$random_index]}"
+    valid_rpcs=()
 
-    # Trích xuất RPC và usage_count bằng cách dùng awk và sử dụng dấu "?" làm dấu phân cách
+    for rpc_line in "${rpc_usage_list[@]}"; do
+        rpc=$(echo "$rpc_line" | awk -F'?' '{print $1}')
+        usage_count=$(echo "$rpc_line" | awk -F'?' '{print $2}')
+
+        if [ "$usage_count" -lt "$MAX_USAGE" ]; then
+            valid_rpcs+=("$rpc_line")
+        fi
+    done
+
+    if [ ${#valid_rpcs[@]} -eq 0 ]; then
+        echo "Error: No RPC with usage count less than $MAX_USAGE found."
+        exit 1
+    fi
+
+    random_index=$((RANDOM % ${#valid_rpcs[@]}))
+    rpc_line="${valid_rpcs[$random_index]}"
     rpc=$(echo "$rpc_line" | awk -F'?' '{print $1}')
     usage_count=$(echo "$rpc_line" | awk -F'?' '{print $2}')
 
-    # Increment usage count
+    echo "Selected RPC: $rpc with usage count: $usage_count"
+
     new_usage_count=$((usage_count + 1))
 
-    # Update the rpc_usage file
-    rpc_usage_list[$random_index]="$rpc?$new_usage_count"
+    for i in "${!rpc_usage_list[@]}"; do
+        if [[ "${rpc_usage_list[$i]}" == "$rpc_line" ]]; then
+            rpc_usage_list[$i]="$rpc?$new_usage_count"
+            break
+        fi
+    done
+
     printf "%s\n" "${rpc_usage_list[@]}" > "$rpc_usage_file"
 
-    # Return the randomly selected RPC
     echo "$rpc"
     return 0
 }
-# Cập nhật tất cả các tệp JSON
+
 for file in "$dir_path"/wl_*.json; do
     echo "Updating file $file..."
 
@@ -167,14 +180,12 @@ for file in "$dir_path"/wl_*.json; do
 
     echo "New RPC for $file: $new_nodeRpc"
 
-    # Cập nhật file JSON
     jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp"
     if [ $? -ne 0 ]; then
         echo "jq command failed for file $file. Skipping..."
         continue
     fi
 
-    # Thay thế file gốc với file tmp
     mv "${file}.tmp" "$file"
     if [ $? -eq 0 ]; then
         echo "Successfully updated $file with new RPC: $new_nodeRpc"
@@ -184,3 +195,4 @@ for file in "$dir_path"/wl_*.json; do
 done
 
 echo "All config files have been updated."
+Những thay đổi chính:
