@@ -1,5 +1,10 @@
 #!/bin/bash
 
+git clone https://github.com/allora-network/allora-huggingface-walkthrough
+
+wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/app.py -O /root/allora-huggingface-walkthrough/app.py
+wget -q https://raw.githubusercontent.com/ReJumpLabs/Hugging-Face-model/main/requirements.txt -O /root/allora-huggingface-walkthrough/requirements.txt
+
 NUM_WL=$(wc -l < $HOME/wl_formated.txt)
 
 if ! grep -q "export NUM_WL=" ~/.bash_profile; then
@@ -7,9 +12,6 @@ if ! grep -q "export NUM_WL=" ~/.bash_profile; then
 fi
 
 source ~/.bash_profile
-
-mkdir -p allora_backup
-mv $HOME/allora-huggingface-walkthrough/wl* $HOME/allora_backup/
 
 # Doc file wl_formated.txt va tao cac file cau hinh
 i=1
@@ -31,6 +33,33 @@ while IFS='|' read -r address mnemonic; do\
         "submitTx": true
     },
     "worker": [
+        {
+            "topicId": 1,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 15,
+            "parameters": {
+            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+            "Token": "ETH"
+            }
+        },
+        {
+            "topicId": 3,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 15,
+            "parameters": {
+            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+            "Token": "BTC"
+            }
+        },
+        {
+            "topicId": 5,
+            "inferenceEntrypointName": "api-worker-reputer",
+            "loopSeconds": 15,
+            "parameters": {
+            "InferenceEndpoint": "http://inference:8000/inference/{Token}",
+            "Token": "SOL"
+            }
+        },
         {
             "topicId": 7,
             "inferenceEntrypointName": "api-worker-reputer",
@@ -71,7 +100,7 @@ endpoints=$(echo "$json_data" | jq -r '
   | map(select(.value.tx_index == "on")) 
   | sort_by(.value.latest_block_height | tonumber) 
   | reverse 
-  | .[:50] 
+  | .[:80] 
   | .[].key
   | "http://" + .
 ')
@@ -84,4 +113,34 @@ fixed_endpoints=$(for i in {1..5}; do echo "https://allora-testnet-rpc.itrocket.
 echo "$endpoints" > rpc_list.txt
 echo "$fixed_endpoints" >> rpc_list.txt
 echo "$random_endpoints" >> rpc_list.txt
+cp /root/rpc_list.txt /root/allora-huggingface-walkthrough/rpc_list.txt
 
+dir_path="$HOME/allora-huggingface-walkthrough"
+rpc_file="$HOME/allora-huggingface-walkthrough/rpc_list.txt"
+if [ ! -f "$rpc_file" ]; then
+    echo "File rpc_list.txt không tồn tại!"
+    exit 1
+fi
+mapfile -t rpc_list < "$rpc_file"
+
+get_random_rpc() {
+    local rpc_index=$((RANDOM % ${#rpc_list[@]}))
+    local rpc_value=${rpc_list[$rpc_index]}
+    unset rpc_list[$rpc_index]
+    rpc_list=("${rpc_list[@]}")
+    echo "$rpc_value"
+}
+for file in "$dir_path"/wl_*.json; do
+    echo "Updating file $file..."
+    
+    new_nodeRpc=$(get_random_rpc)
+    
+    jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+    if [ $? -eq 0 ]; then
+        echo "Successfully updated $file with new RPC: $new_nodeRpc"
+    else
+        echo "Failed to update $file"
+        exit 1
+    fi
+done
+echo "All config files have been updated."
