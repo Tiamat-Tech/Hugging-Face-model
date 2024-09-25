@@ -122,52 +122,55 @@ fi
 
 # Function to get a random RPC that has been used fewer than 10 times
 get_random_rpc() {
-    while true; do
-        # Read the rpc_usage file into an array
-        mapfile -t rpc_usage_list < "$rpc_usage_file"
+    mapfile -t rpc_list < "$rpc_file"
+    
+    # Check if the rpc_list is empty
+    if [ ${#rpc_list[@]} -eq 0 ]; then
+        echo "Error: RPC list is empty!"
+        exit 1
+    fi
 
-        # Pick a random index from the rpc_usage_list
-        random_index=$((RANDOM % ${#rpc_usage_list[@]}))
-        rpc_line="${rpc_usage_list[$random_index]}"
+    # Pick a random index from the rpc_list
+    random_index=$((RANDOM % ${#rpc_list[@]}))
+    rpc="${rpc_list[$random_index]}"
 
-        # Extract the RPC URL and the usage count
-        rpc=$(echo "$rpc_line" | cut -d':' -f1)
-        usage_count=$(echo "$rpc_line" | cut -d':' -f2)
-
-        # Ensure usage_count is numeric before comparing it
-        if [[ "$usage_count" =~ ^[0-9]+$ ]]; then
-            # Only select RPCs that have been used fewer than 10 times
-            if [ "$usage_count" -lt 10 ]; then
-                # Increment the usage count
-                new_usage_count=$((usage_count + 1))
-
-                # Update the rpc_usage file with the new usage count
-                sed -i "${random_index}s/.*/$rpc:$new_usage_count/" "$rpc_usage_file"
-
-                # Return the selected RPC
-                echo "$rpc"
-                return
-            fi
-        else
-            echo "Error: Non-numeric usage count for $rpc. Skipping..."
-        fi
-    done
+    # Return the randomly selected RPC
+    echo "$rpc"
 }
 
-dir_path="$HOME/allora-huggingface-walkthrough"
+# Process each JSON config file
 for file in "$dir_path"/wl_*.json; do
+    # Check if the file exists and is readable
+    if [ ! -f "$file" ]; then
+        echo "Error: File $file not found or not readable."
+        continue
+    fi
+
     echo "Updating file $file..."
 
+    # Get a random RPC from the list
     new_nodeRpc=$(get_random_rpc)
 
-    jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+    # Check if an RPC was successfully fetched
+    if [ -z "$new_nodeRpc" ]; then
+        echo "Error: Failed to fetch a valid RPC."
+        exit 1
+    fi
+
+    # Debugging: Print the new RPC being applied
+    echo "New RPC to be applied: $new_nodeRpc"
+
+    # Update the JSON config file with the new RPC
+    jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp"
+
+    # Check if jq was successful
     if [ $? -eq 0 ]; then
+        mv "${file}.tmp" "$file"
         echo "Successfully updated $file with new RPC: $new_nodeRpc"
     else
-        echo "Failed to update $file"
+        echo "Failed to update $file with jq. Check file structure and jq command."
         exit 1
     fi
 done
 
 echo "All config files have been updated."
-
