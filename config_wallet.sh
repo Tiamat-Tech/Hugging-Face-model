@@ -2,6 +2,7 @@
 
 set -e 
 
+rm -rf allora-huggingface-walkthrough
 git clone https://github.com/allora-network/allora-huggingface-walkthrough || { echo "Git clone failed"; exit 1; }
 cp /root/wl_formated.txt /root/allora-huggingface-walkthrough/wl_formated.txt || { echo "Copy failed"; exit 1; }
 
