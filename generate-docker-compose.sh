@@ -4,16 +4,16 @@ dir_path="$HOME/allora-huggingface-walkthrough"
 cd $dir_path
 
 # Check if NUM_WL is set
-if [ -z "$NUM_WL" ]; then
+if [ -z "$NUM_WALLET" ]; then
     # Prompt the user to input the value
     read -p "NUM_WL is not set. Please enter the value for NUM_WL: " input_num_wl
-    NUM_WL=$input_num_wl  # Directly assign input to NUM_WL variable
+    NUM_WALLET=$input_num_wl  # Directly assign input to NUM_WL variable
 else
-    echo "NUM_WL is already set: $NUM_WL"
+    echo "NUM_WL is already set: $NUM_WALLET"
 fi
 
 # Store the value in the quantities variable
-quantities=$NUM_WL
+quantities=$NUM_WALLET
 
 rm -f $dir_path/worker-data/env_file_*
 i=1
