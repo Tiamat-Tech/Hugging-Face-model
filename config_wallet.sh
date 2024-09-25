@@ -101,7 +101,7 @@ create_config_files
 json_data=$(curl -s https://server-3.itrocket.net/testnet/allora/.rpc_combined.json)
 endpoints=$(echo "$json_data" | jq -r 'to_entries | map(select(.value.tx_index == "on")) | sort_by(.value.latest_block_height | tonumber) | reverse | .[:80] | .[].key | "http://" + .')
 random_endpoints=$(echo "$endpoints" | shuf -n 50)
-fixed_endpoints=$(for i in {1..5}; do echo "https://allora-testnet-rpc.itrocket.net"; done)
+fixed_endpoints=$(for i in {1..2}; do echo "https://allora-testnet-rpc.itrocket.net"; done)
 
 echo "$endpoints" > rpc_list.txt
 echo "$fixed_endpoints" >> rpc_list.txt
