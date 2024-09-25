@@ -135,17 +135,17 @@ def get_inference(tokenorblockheightorparty):
     if tokenorblockheightorparty.isnumeric():
         namecoin = get_memecoin_token(tokenorblockheightorparty)
         price = get_simple_price(namecoin)
-        price1 = price + price*0.2/100
-        price2 = price - price*0.2/100
+        price1 = price + price*0.8/100
+        price2 = price - price*0.8/100
         predict_result = str(round(random.uniform(price1, price2), 7))
     elif len(tokenorblockheightorparty) == 3 and tokenorblockheightorparty.isalpha(): 
         try:
             with open(tokenorblockheightorparty + ".txt", "r") as file:
                 content = file.read().strip()
             price = float(content)
-            price1 = price + price*0.8/100
-            price2 = price - price*0.8/100
-            predict_result = str(round(random.uniform(price1, price2), 2))
+            price1 = price + price*0.2/100
+            price2 = price - price*0.2/100
+            predict_result = str(round(random.uniform(price1, price2), 7))
         except Exception as e:
             return Response(json.dumps({"pipeline error": str(e)}), status=500, mimetype='application/json')
         
