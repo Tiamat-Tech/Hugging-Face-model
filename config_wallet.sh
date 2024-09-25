@@ -110,23 +110,42 @@ cp /root/rpc_list.txt /root/allora-huggingface-walkthrough/rpc_list.txt
 
 dir_path="$HOME/allora-huggingface-walkthrough"
 rpc_file="$HOME/allora-huggingface-walkthrough/rpc_list.txt"
-if [ ! -f "$rpc_file" ]; then
-    echo "File rpc_list.txt không tồn tại!"
-    exit 1
+rpc_usage_file="$HOME/allora-huggingface-walkthrough/rpc_usage.txt"
+
+if [ ! -f "$rpc_usage_file" ]; then
+    mapfile -t rpc_list < "$rpc_file"
+    for rpc in "${rpc_list[@]}"; do
+        echo "$rpc:0" >> "$rpc_usage_file"
+    done
 fi
-mapfile -t rpc_list < "$rpc_file"
 
 get_random_rpc() {
-    local rpc_index=$((RANDOM % ${#rpc_list[@]}))
-    local rpc_value=${rpc_list[$rpc_index]}
-    unset rpc_list[$rpc_index]
-    rpc_list=("${rpc_list[@]}")
-    echo "$rpc_value"
+    while true; do
+        mapfile -t rpc_usage_list < "$rpc_usage_file"
+
+        random_index=$((RANDOM % ${#rpc_usage_list[@]}))
+        rpc_line="${rpc_usage_list[$random_index]}"
+
+        rpc=$(echo "$rpc_line" | cut -d':' -f1)
+        usage_count=$(echo "$rpc_line" | cut -d':' -f2)
+
+        if [ "$usage_count" -lt 10 ]; then
+            new_usage_count=$((usage_count + 1))
+
+            sed -i "${random_index}s/.*/$rpc:$new_usage_count/" "$rpc_usage_file"
+
+            echo "$rpc"
+            return
+        fi
+    done
 }
 
+dir_path="$HOME/allora-huggingface-walkthrough"
 for file in "$dir_path"/wl_*.json; do
     echo "Updating file $file..."
+
     new_nodeRpc=$(get_random_rpc)
+
     jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
     if [ $? -eq 0 ]; then
         echo "Successfully updated $file with new RPC: $new_nodeRpc"
@@ -137,3 +156,4 @@ for file in "$dir_path"/wl_*.json; do
 done
 
 echo "All config files have been updated."
+
