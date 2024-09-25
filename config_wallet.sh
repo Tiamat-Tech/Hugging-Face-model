@@ -195,4 +195,3 @@ for file in "$dir_path"/wl_*.json; do
 done
 
 echo "All config files have been updated."
-Những thay đổi chính:
