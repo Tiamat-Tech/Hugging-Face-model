@@ -120,23 +120,36 @@ if [ ! -f "$rpc_usage_file" ]; then
     done
 fi
 
+# Function to get a random RPC that has been used fewer than 10 times
 get_random_rpc() {
     while true; do
+        # Read the rpc_usage file into an array
         mapfile -t rpc_usage_list < "$rpc_usage_file"
 
+        # Pick a random index from the rpc_usage_list
         random_index=$((RANDOM % ${#rpc_usage_list[@]}))
         rpc_line="${rpc_usage_list[$random_index]}"
 
+        # Extract the RPC URL and the usage count
         rpc=$(echo "$rpc_line" | cut -d':' -f1)
         usage_count=$(echo "$rpc_line" | cut -d':' -f2)
 
-        if [ "$usage_count" -lt 10 ]; then
-            new_usage_count=$((usage_count + 1))
+        # Ensure usage_count is numeric before comparing it
+        if [[ "$usage_count" =~ ^[0-9]+$ ]]; then
+            # Only select RPCs that have been used fewer than 10 times
+            if [ "$usage_count" -lt 10 ]; then
+                # Increment the usage count
+                new_usage_count=$((usage_count + 1))
 
-            sed -i "${random_index}s/.*/$rpc:$new_usage_count/" "$rpc_usage_file"
+                # Update the rpc_usage file with the new usage count
+                sed -i "${random_index}s/.*/$rpc:$new_usage_count/" "$rpc_usage_file"
 
-            echo "$rpc"
-            return
+                # Return the selected RPC
+                echo "$rpc"
+                return
+            fi
+        else
+            echo "Error: Non-numeric usage count for $rpc. Skipping..."
         fi
     done
 }
