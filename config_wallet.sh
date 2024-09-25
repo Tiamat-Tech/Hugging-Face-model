@@ -113,63 +113,73 @@ dir_path="$HOME/allora-huggingface-walkthrough"
 rpc_file="$HOME/allora-huggingface-walkthrough/rpc_list.txt"
 rpc_usage_file="$HOME/allora-huggingface-walkthrough/rpc_usage.txt"
 
+
+# Khởi tạo rpc_usage.txt nếu chưa tồn tại
 if [ ! -f "$rpc_usage_file" ]; then
+    echo "Initializing rpc_usage.txt..."
     mapfile -t rpc_list < "$rpc_file"
+    > "$rpc_usage_file"
     for rpc in "${rpc_list[@]}"; do
-        echo "$rpc:0" >> "$rpc_usage_file"
+        # In ra dòng để kiểm tra xem RPC có bị sai sót không
+        echo "Processing RPC: $rpc"
+        echo "$rpc?0" >> "$rpc_usage_file"
     done
 fi
 
-# Function to get a random RPC that has been used fewer than 10 times
+# Function to get a random RPC and update usage count
 get_random_rpc() {
-    mapfile -t rpc_list < "$rpc_file"
+    mapfile -t rpc_usage_list < "$rpc_usage_file"
     
-    # Check if the rpc_list is empty
-    if [ ${#rpc_list[@]} -eq 0 ]; then
-        echo "Error: RPC list is empty!"
+    # Check if the rpc_usage_list is empty
+    if [ ${#rpc_usage_list[@]} -eq 0 ]; then
+        echo "Error: RPC usage list is empty!"
         exit 1
     fi
 
-    # Pick a random index from the rpc_list
-    random_index=$((RANDOM % ${#rpc_list[@]}))
-    rpc="${rpc_list[$random_index]}"
+    # Pick a random index from the rpc_usage_list
+    random_index=$((RANDOM % ${#rpc_usage_list[@]}))
+    rpc_line="${rpc_usage_list[$random_index]}"
+
+    # Trích xuất RPC và usage_count bằng cách dùng awk và sử dụng dấu "?" làm dấu phân cách
+    rpc=$(echo "$rpc_line" | awk -F'?' '{print $1}')
+    usage_count=$(echo "$rpc_line" | awk -F'?' '{print $2}')
+
+    # Increment usage count
+    new_usage_count=$((usage_count + 1))
+
+    # Update the rpc_usage file
+    rpc_usage_list[$random_index]="$rpc?$new_usage_count"
+    printf "%s\n" "${rpc_usage_list[@]}" > "$rpc_usage_file"
 
     # Return the randomly selected RPC
     echo "$rpc"
+    return 0
 }
-
-# Process each JSON config file
+# Cập nhật tất cả các tệp JSON
 for file in "$dir_path"/wl_*.json; do
-    # Check if the file exists and is readable
-    if [ ! -f "$file" ]; then
-        echo "Error: File $file not found or not readable."
+    echo "Updating file $file..."
+
+    new_nodeRpc=$(get_random_rpc)
+    if [ $? -ne 0 ]; then
+        echo "Failed to fetch a valid RPC. Skipping file $file."
         continue
     fi
 
-    echo "Updating file $file..."
+    echo "New RPC for $file: $new_nodeRpc"
 
-    # Get a random RPC from the list
-    new_nodeRpc=$(get_random_rpc)
-
-    # Check if an RPC was successfully fetched
-    if [ -z "$new_nodeRpc" ]; then
-        echo "Error: Failed to fetch a valid RPC."
-        exit 1
+    # Cập nhật file JSON
+    jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp"
+    if [ $? -ne 0 ]; then
+        echo "jq command failed for file $file. Skipping..."
+        continue
     fi
 
-    # Debugging: Print the new RPC being applied
-    echo "New RPC to be applied: $new_nodeRpc"
-
-    # Update the JSON config file with the new RPC
-    jq --arg new_nodeRpc "$new_nodeRpc" '.wallet.nodeRpc = $new_nodeRpc' "$file" > "${file}.tmp"
-
-    # Check if jq was successful
+    # Thay thế file gốc với file tmp
+    mv "${file}.tmp" "$file"
     if [ $? -eq 0 ]; then
-        mv "${file}.tmp" "$file"
         echo "Successfully updated $file with new RPC: $new_nodeRpc"
     else
-        echo "Failed to update $file with jq. Check file structure and jq command."
-        exit 1
+        echo "Failed to update $file"
     fi
 done
 
