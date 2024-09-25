@@ -135,9 +135,9 @@ def get_inference(tokenorblockheightorparty):
     if tokenorblockheightorparty.isnumeric():
         namecoin = get_memecoin_token(tokenorblockheightorparty)
         price = get_simple_price(namecoin)
-        price1 = price + price*0.8/100
-        price2 = price - price*0.8/100
-        predict_result = str(round(random.uniform(price1, price2), 6))
+        price1 = price + price*0.2/100
+        price2 = price - price*0.2/100
+        predict_result = str(round(random.uniform(price1, price2), 7))
     elif len(tokenorblockheightorparty) == 3 and tokenorblockheightorparty.isalpha(): 
         try:
             with open(tokenorblockheightorparty + ".txt", "r") as file:
