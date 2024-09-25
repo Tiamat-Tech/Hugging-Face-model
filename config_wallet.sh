@@ -152,8 +152,6 @@ get_random_rpc() {
     rpc=$(echo "$rpc_line" | awk -F'?' '{print $1}')
     usage_count=$(echo "$rpc_line" | awk -F'?' '{print $2}')
 
-    echo "Selected RPC: $rpc with usage count: $usage_count"
-
     new_usage_count=$((usage_count + 1))
 
     for i in "${!rpc_usage_list[@]}"; do
